@@ -1,4 +1,5 @@
 import sqlite3
+import random
 
 def connect():
     return sqlite3.connect("data.db", check_same_thread=False)
@@ -11,7 +12,8 @@ def create_tables():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER UNIQUE,
         username TEXT,
-        balance REAL DEFAULT 0
+        balance REAL DEFAULT 0,
+        card TEXT DEFAULT ''
     )
     """)
     cur.execute("""
@@ -24,6 +26,13 @@ def create_tables():
     CREATE TABLE IF NOT EXISTS admins (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         admin_id INTEGER UNIQUE
+    )
+    """)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_name TEXT,
+        description TEXT
     )
     """)
     conn.commit()
@@ -59,6 +68,26 @@ def get_balance(user_id):
     conn.close()
     return result[0] if result else 0
 
+def update_card(user_id, card_number):
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("UPDATE users SET card = ? WHERE user_id = ?", (card_number, user_id))
+    conn.commit()
+    conn.close()
+
+def add_task(task_name, description):
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO tasks (task_name, description) VALUES (?, ?)", (task_name, description))
+    conn.commit()
+    conn.close()
+
+def get_random_user():
+    users = get_users()
+    if users:
+        return random.choice(users)
+    return None
+
 def add_channel(channel_id):
     conn = connect()
     cur = conn.cursor()
@@ -73,6 +102,13 @@ def get_channels():
     channels = [row[0] for row in cur.fetchall()]
     conn.close()
     return channels
+
+def remove_channel(channel_id):
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
+    conn.commit()
+    conn.close()
 
 def add_admin(admin_id):
     conn = connect()
@@ -107,19 +143,11 @@ class Database:
         return get_balance(user_id)
 
     @staticmethod
-    def add_channel(channel_id):
-        return add_channel(channel_id)
+    def update_card(user_id, card_number):
+        return update_card(user_id, card_number)
 
     @staticmethod
-    def get_channels():
-        return get_channels()
+    def add_task(task_name, description):
+        return add_task(task_name, description)
 
     @staticmethod
-    def add_admin(admin_id):
-        return add_admin(admin_id)
-
-    @staticmethod
-    def get_admins():
-        return get_admins()
-
-create_tables()
