@@ -1,1 +1,2 @@
-web: python bot.py
+web: python keep_alive.py
+worker: python bot.py
