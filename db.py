@@ -38,12 +38,14 @@ def create_tables():
     conn.commit()
     conn.close()
 
+
 def add_user(user_id, username=None):
     conn = connect()
     cur = conn.cursor()
     cur.execute("INSERT OR IGNORE INTO users (user_id, username) VALUES (?, ?)", (user_id, username))
     conn.commit()
     conn.close()
+
 
 def get_users():
     conn = connect()
@@ -53,12 +55,14 @@ def get_users():
     conn.close()
     return users
 
+
 def add_balance(user_id, amount):
     conn = connect()
     cur = conn.cursor()
     cur.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, user_id))
     conn.commit()
     conn.close()
+
 
 def get_balance(user_id):
     conn = connect()
@@ -68,12 +72,14 @@ def get_balance(user_id):
     conn.close()
     return result[0] if result else 0
 
+
 def update_card(user_id, card_number):
     conn = connect()
     cur = conn.cursor()
     cur.execute("UPDATE users SET card = ? WHERE user_id = ?", (card_number, user_id))
     conn.commit()
     conn.close()
+
 
 def add_task(task_name, description):
     conn = connect()
@@ -82,11 +88,13 @@ def add_task(task_name, description):
     conn.commit()
     conn.close()
 
+
 def get_random_user():
     users = get_users()
     if users:
         return random.choice(users)
     return None
+
 
 def add_channel(channel_id):
     conn = connect()
@@ -94,6 +102,7 @@ def add_channel(channel_id):
     cur.execute("INSERT OR IGNORE INTO channels (channel_id) VALUES (?)", (channel_id,))
     conn.commit()
     conn.close()
+
 
 def get_channels():
     conn = connect()
@@ -103,12 +112,14 @@ def get_channels():
     conn.close()
     return channels
 
+
 def remove_channel(channel_id):
     conn = connect()
     cur = conn.cursor()
     cur.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
     conn.commit()
     conn.close()
+
 
 def add_admin(admin_id):
     conn = connect()
@@ -117,6 +128,7 @@ def add_admin(admin_id):
     conn.commit()
     conn.close()
 
+
 def get_admins():
     conn = connect()
     cur = conn.cursor()
@@ -124,6 +136,7 @@ def get_admins():
     admins = [row[0] for row in cur.fetchall()]
     conn.close()
     return admins
+
 
 class Database:
     @staticmethod
@@ -151,3 +164,28 @@ class Database:
         return add_task(task_name, description)
 
     @staticmethod
+    def get_random_user():
+        return get_random_user()
+
+    @staticmethod
+    def add_channel(channel_id):
+        return add_channel(channel_id)
+
+    @staticmethod
+    def get_channels():
+        return get_channels()
+
+    @staticmethod
+    def remove_channel(channel_id):
+        return remove_channel(channel_id)
+
+    @staticmethod
+    def add_admin(admin_id):
+        return add_admin(admin_id)
+
+    @staticmethod
+    def get_admins():
+        return get_admins()
+
+
+create_tables()
