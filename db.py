@@ -187,5 +187,12 @@ class Database:
     def get_admins():
         return get_admins()
 
+create_tables()
 
+def load_db():
+    create_tables()
+    return True
+
+def save_db():
+    return True
 create_tables()
