@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 import random
 from config import BOT_TOKEN, PRICE_PER_SUB, REF_BONUS, BONUS_MIN, BONUS_MAX, CARD_NUMBER, MANDATORY_CHANNELS
-from database.db import load_db, save_db, register_user, get_user, add_balance, can_take_bonus, set_bonus_taken, add_referral, add_order, complete_order, add_payment_request, get_required_channels, add_required_channel, remove_required_channel
+from db import load_db, save_db, register_user, get_user, add_balance, can_take_bonus, set_bonus_taken, add_referral, add_order, complete_order, add_payment_request, get_required_channels, add_required_channel, remove_required_channel
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
