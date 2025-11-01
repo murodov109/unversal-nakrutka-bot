@@ -1,127 +1,125 @@
 import sqlite3
 
 def connect():
-    db = sqlite3.connect("data.db", check_same_thread=False)
-    db.row_factory = sqlite3.Row
-    return db
+    return sqlite3.connect("data.db", check_same_thread=False)
 
-def init_db():
-    db = connect()
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY,
-            username TEXT,
-            balance REAL DEFAULT 0,
-            card TEXT
-        )
+def create_tables():
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER UNIQUE,
+        username TEXT,
+        balance REAL DEFAULT 0
+    )
     """)
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS channels (
-            channel_id INTEGER PRIMARY KEY
-        )
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS channels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_id INTEGER UNIQUE
+    )
     """)
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS admins (
-            admin_id INTEGER PRIMARY KEY
-        )
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS admins (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER UNIQUE
+    )
     """)
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            channel_id INTEGER,
-            reward REAL,
-            limit_count INTEGER,
-            done INTEGER DEFAULT 0
-        )
-    """)
-    db.commit()
-    db.close()
+    conn.commit()
+    conn.close()
 
 def add_user(user_id, username=None):
-    db = connect()
-    db.execute("INSERT OR IGNORE INTO users (user_id, username) VALUES (?, ?)", (user_id, username))
-    db.commit()
-    db.close()
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO users (user_id, username) VALUES (?, ?)", (user_id, username))
+    conn.commit()
+    conn.close()
 
 def get_users():
-    db = connect()
-    result = db.execute("SELECT * FROM users").fetchall()
-    db.close()
-    return [dict(r) for r in result]
-
-def get_random_user():
-    db = connect()
-    result = db.execute("SELECT user_id FROM users ORDER BY RANDOM() LIMIT 1").fetchone()
-    db.close()
-    return result["user_id"] if result else None
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("SELECT user_id FROM users")
+    users = [row[0] for row in cur.fetchall()]
+    conn.close()
+    return users
 
 def add_balance(user_id, amount):
-    db = connect()
-    db.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, user_id))
-    db.commit()
-    db.close()
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, user_id))
+    conn.commit()
+    conn.close()
 
-def update_card(user_id, card):
-    db = connect()
-    db.execute("UPDATE users SET card = ? WHERE user_id = ?", (card, user_id))
-    db.commit()
-    db.close()
-
-def get_channels():
-    db = connect()
-    result = db.execute("SELECT * FROM channels").fetchall()
-    db.close()
-    return [r["channel_id"] for r in result]
+def get_balance(user_id):
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("SELECT balance FROM users WHERE user_id = ?", (user_id,))
+    result = cur.fetchone()
+    conn.close()
+    return result[0] if result else 0
 
 def add_channel(channel_id):
-    db = connect()
-    db.execute("INSERT OR IGNORE INTO channels (channel_id) VALUES (?)", (channel_id,))
-    db.commit()
-    db.close()
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO channels (channel_id) VALUES (?)", (channel_id,))
+    conn.commit()
+    conn.close()
 
-def remove_channel(channel_id):
-    db = connect()
-    db.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
-    db.commit()
-    db.close()
+def get_channels():
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("SELECT channel_id FROM channels")
+    channels = [row[0] for row in cur.fetchall()]
+    conn.close()
+    return channels
 
 def add_admin(admin_id):
-    db = connect()
-    db.execute("INSERT OR IGNORE INTO admins (admin_id) VALUES (?)", (admin_id,))
-    db.commit()
-    db.close()
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO admins (admin_id) VALUES (?)", (admin_id,))
+    conn.commit()
+    conn.close()
 
 def get_admins():
-    db = connect()
-    result = db.execute("SELECT * FROM admins").fetchall()
-    db.close()
-    return [r["admin_id"] for r in result]
+    conn = connect()
+    cur = conn.cursor()
+    cur.execute("SELECT admin_id FROM admins")
+    admins = [row[0] for row in cur.fetchall()]
+    conn.close()
+    return admins
 
-def remove_admin(admin_id):
-    db = connect()
-    db.execute("DELETE FROM admins WHERE admin_id = ?", (admin_id,))
-    db.commit()
-    db.close()
+class Database:
+    @staticmethod
+    def add_user(user_id, username=None):
+        return add_user(user_id, username)
 
-def add_task(channel_id, reward, limit_count):
-    db = connect()
-    db.execute(
-        "INSERT INTO tasks (channel_id, reward, limit_count, done) VALUES (?, ?, ?, 0)",
-        (channel_id, reward, limit_count)
-    )
-    db.commit()
-    db.close()
+    @staticmethod
+    def get_users():
+        return get_users()
 
-def get_tasks():
-    db = connect()
-    result = db.execute("SELECT * FROM tasks").fetchall()
-    db.close()
-    return [dict(r) for r in result]
+    @staticmethod
+    def add_balance(user_id, amount):
+        return add_balance(user_id, amount)
 
-def delete_task(task_id):
-    db = connect()
-    db.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
-    db.commit()
-    db.close()
+    @staticmethod
+    def get_balance(user_id):
+        return get_balance(user_id)
 
-init_db()
+    @staticmethod
+    def add_channel(channel_id):
+        return add_channel(channel_id)
+
+    @staticmethod
+    def get_channels():
+        return get_channels()
+
+    @staticmethod
+    def add_admin(admin_id):
+        return add_admin(admin_id)
+
+    @staticmethod
+    def get_admins():
+        return get_admins()
+
+create_tables()
