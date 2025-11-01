@@ -1,6 +1,6 @@
 import os
 
-TOKEN = os.getenv("BOT_TOKEN", "8435705646:AAEJULzHr7N2Z-lleYsoQKf36yVnHxd0iXU")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8435705646:AAEJULzHr7N2Z-lleYsoQKf36yVnHxd0iXU")
 
 BOT_USERNAME = os.getenv("BOT_USERNAME", "@jonli_obunachipro_bot")
 
