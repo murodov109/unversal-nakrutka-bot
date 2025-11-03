@@ -1,31 +1,72 @@
 import telebot
 from telebot import types
+from config import REF_BONUS, BONUS_MIN, BONUS_MAX
 from db import Database
 import random
+import time
 
-db = Database()
+db = Database("data.db")
 
+# Foydalanuvchi menyusi
 def handle_user_panel(bot, message):
-    user_id = message.from_user.id
-    username = message.from_user.username or "Foydalanuvchi"
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add("💰 Balans", "🎁 Bonus olish")
+    markup.add("👥 Referal tizimi", "🛒 Buyurtma berish")
+    markup.add("📞 Yordam")
 
-    markup = types.InlineKeyboardMarkup()
-    ref_link = f"https://t.me/{bot.get_me().username}?start={user_id}"
-    markup.add(types.InlineKeyboardButton("👥 Referal havolam", url=ref_link))
-    markup.add(types.InlineKeyboardButton("🎁 Kunlik bonus olish", callback_data="daily_bonus"))
-    bot.send_message(user_id, "💸 Pul ishlash bo‘limi:\n\n👇 Quyidagi havolani do‘stlaringizga yuboring va har bir taklif uchun 300 so‘m oling!", reply_markup=markup)
+    bot.send_message(
+        message.chat.id,
+        f"Salom, {message.from_user.first_name}! 👋\nQuyidagi menyudan birini tanlang:",
+        reply_markup=markup
+    )
 
-@staticmethod
-def send_bonus(bot, call):
-    user_id = call.from_user.id
-    if db.can_take_bonus(user_id):
-        bonus = random.randint(10, 100)
-        db.add_balance(user_id, bonus)
-        db.set_bonus_taken(user_id)
-        bot.answer_callback_query(call.id, f"🎉 Siz {bonus} so‘m bonus oldingiz!")
+# Balansni ko‘rsatish
+def show_balance(bot, message):
+    user = db.get_user(message.chat.id)
+    if user:
+        bot.send_message(message.chat.id, f"💰 Sizning balansingiz: {user[3]:.2f} so‘m")
     else:
-        bot.answer_callback_query(call.id, "⏳ Siz bonusni kuniga bir marta olishingiz mumkin!")
+        bot.send_message(message.chat.id, "Siz ro‘yxatdan o‘tmagansiz. /start ni bosing!")
 
-def handle_callback(bot, call):
-    if call.data == "daily_bonus":
-        send_bonus(bot, call)
+# Bonus olish
+def get_bonus(bot, message):
+    user = db.get_user(message.chat.id)
+    if not user:
+        bot.send_message(message.chat.id, "Avval /start buyrug‘ini bosing!")
+        return
+
+    now = int(time.time())
+    last_bonus_time = user[4] if len(user) > 4 else 0
+    if now - last_bonus_time < 86400:  # 24 soat
+        remaining = 86400 - (now - last_bonus_time)
+        bot.send_message(message.chat.id, f"🎁 Siz bonusni allaqachon olgansiz.\nYangi bonus {remaining // 3600} soatdan keyin.")
+        return
+
+    bonus_amount = random.randint(BONUS_MIN, BONUS_MAX)
+    db.add_balance(message.chat.id, bonus_amount)
+    db.set_bonus_time(message.chat.id, now)
+
+    bot.send_message(message.chat.id, f"🎉 Tabriklaymiz! Siz {bonus_amount} so‘m bonus oldingiz.")
+
+# Referal tizimi
+def referral_info(bot, message):
+    ref_link = f"https://t.me/{bot.get_me().username}?start={message.chat.id}"
+    bot.send_message(
+        message.chat.id,
+        f"👥 Sizning referal linkingiz:\n{ref_link}\n\n"
+        f"Do‘stlaringiz ushbu link orqali kirsa, siz {REF_BONUS} so‘m olasiz!"
+    )
+
+# Buyurtma berish
+def make_order(bot, message):
+    bot.send_message(
+        message.chat.id,
+        "🛒 Buyurtma berish funksiyasi hozircha ishlab chiqilmoqda.\nTez orada ishga tushadi!"
+    )
+
+# Yordam
+def help_info(bot, message):
+    bot.send_message(
+        message.chat.id,
+        "📞 Yordam uchun admin bilan bog‘laning:\n@admin_username"
+    )
