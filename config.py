@@ -9,3 +9,4 @@ BONUS_MIN = 10
 BONUS_MAX = 100
 REF_BONUS = 50
 MANDATORY_CHANNELS = ["@example_channel1", "@example_channel2"]
+BOT_TOKEN = TOKEN
